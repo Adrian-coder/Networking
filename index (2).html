@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Teste Certiport Networking</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;font-family:Arial,sans-serif;background:#eef2f7;color:#1f2937}
+.app{width:100%;max-width:980px;margin:0 auto;min-height:100vh;padding:16px;display:flex;align-items:center;justify-content:center}
+.card{width:100%;background:#fff;border-radius:18px;padding:24px;box-shadow:0 10px 30px rgba(0,0,0,.08)}
+.header{display:flex;justify-content:space-between;gap:14px;align-items:flex-start;border-bottom:1px solid #e5e7eb;padding-bottom:16px;margin-bottom:20px}
+h1,h2,h3{margin-top:0} h1{margin-bottom:6px;font-size:26px;line-height:1.2}
+.small{margin:4px 0 0;color:#6b7280;font-size:14px;line-height:1.35}
+.badge{background:#eff6ff;color:#1d4ed8;border:1px solid #bfdbfe;padding:8px 12px;border-radius:999px;font-size:14px;white-space:nowrap}
+.menu-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin-top:20px}
+.test-link{border:1px solid #d1d5db;background:#f9fafb;border-radius:16px;padding:18px;text-align:left;cursor:pointer;transition:.15s;min-height:110px}
+.test-link:hover{background:#eff6ff;border-color:#60a5fa;transform:translateY(-1px)}
+.test-link strong{display:block;font-size:19px;margin-bottom:8px} .test-link span{color:#6b7280;font-size:14px;line-height:1.35}
+.progress-line{width:100%;height:10px;background:#e5e7eb;border-radius:999px;overflow:hidden;margin-bottom:20px}
+.progress-fill{height:100%;width:0%;background:#2563eb;transition:width .25s ease}
+#question{font-size:22px;margin:0 0 18px;line-height:1.35}
+.note{padding:10px 12px;border-radius:10px;background:#fffbeb;color:#92400e;border:1px solid #fde68a;margin-bottom:14px;font-size:14px}
+.answers{display:grid;gap:10px}
+.answer{width:100%;text-align:left;border:1px solid #d1d5db;background:#f9fafb;padding:14px 15px;border-radius:12px;font-size:16px;line-height:1.35;cursor:pointer;transition:.15s;color:#111827}
+.answer:hover{background:#eff6ff;border-color:#60a5fa}
+.answer.selected{background:#dbeafe;border-color:#2563eb}
+.answer.correct{background:#d1fae5;border-color:#10b981}
+.answer.wrong{background:#fee2e2;border-color:#ef4444}
+.actions{display:flex;justify-content:space-between;gap:12px;margin-top:20px;flex-wrap:wrap}
+button.main,button.secondary,button.danger{border-radius:12px;padding:13px 18px;font-size:16px;cursor:pointer;min-height:48px}
+button.main{border:none;background:#2563eb;color:white} button.main:hover{background:#1d4ed8}
+button.secondary{border:1px solid #d1d5db;background:white;color:#374151}
+button.danger{border:1px solid #fecaca;background:#fff1f2;color:#be123c}
+.hidden{display:none}
+.result{text-align:center} .result h2{font-size:30px;margin-bottom:10px}
+.score-big{font-size:42px;font-weight:bold;color:#2563eb;margin:12px 0}
+.result-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:22px 0}
+.result-card{border:1px solid #e5e7eb;border-radius:14px;padding:14px;background:#f9fafb}
+.result-card strong{display:block;font-size:22px;margin-bottom:4px} .result-card span{color:#6b7280;font-size:14px}
+.skipped{margin-top:20px;background:#f9fafb;border:1px solid #e5e7eb;border-radius:14px;padding:14px;text-align:left;font-size:14px;color:#4b5563}
+.review-list{margin-top:18px;text-align:left;max-height:340px;overflow:auto;border:1px solid #e5e7eb;border-radius:14px;padding:12px;background:#fafafa}
+.review-item{padding:10px 0;border-bottom:1px solid #e5e7eb;font-size:14px} .review-item:last-child{border-bottom:none}
+.ok{color:#047857;font-weight:bold} .bad{color:#b91c1c;font-weight:bold} .miss{color:#92400e;font-weight:bold}
+@media(max-width:650px){
+.app{padding:10px;align-items:stretch} .card{border-radius:14px;padding:18px;min-height:calc(100vh - 20px)} .header{flex-direction:column}
+h1{font-size:22px} #question{font-size:19px} .answer{font-size:15px;padding:13px} .actions{flex-direction:column-reverse}
+button.main,button.secondary,button.danger{width:100%} .menu-grid{grid-template-columns:1fr} .result-grid{grid-template-columns:1fr 1fr} .score-big{font-size:34px}
+}
+</style>
+</head>
+<body>
+<div class="app"><div class="card">
+  <div id="menuBox">
+    <div class="header"><div><h1>Teste Certiport Networking</h1><p class="small">Alege secțiunea. La final primești număr de răspunsuri corecte, greșite, fără răspuns și procentaj ca la test.</p></div><div class="badge">Meniu teste</div></div>
+    <div class="menu-grid" id="menuGrid"></div>
+  </div>
+
+  <div id="quizBox" class="hidden">
+    <div class="header"><div><h1 id="testTitle"></h1><p class="small">Poți rezolva tot testul sau poți apăsa „Termină și vezi rezultatele”. Întrebările nerezolvate se calculează ca greșite.</p></div><div class="badge" id="progressText"></div></div>
+    <div class="progress-line"><div class="progress-fill" id="progressFill"></div></div>
+    <p class="note" id="multiNote"></p>
+    <h2 id="question"></h2>
+    <div class="answers" id="answers"></div>
+    <div class="actions">
+      <button class="secondary" onclick="backToMenu()">Înapoi la teste</button>
+      <button class="danger" onclick="finishNow()">Termină și vezi rezultatele</button>
+      <button class="main" onclick="checkOrNext()" id="nextBtn">Verifică</button>
+    </div>
+  </div>
+
+  <div id="resultBox" class="result hidden">
+    <h2>Rezultat final</h2>
+    <div class="score-big" id="percentText">0%</div>
+    <div class="result-grid">
+      <div class="result-card"><strong id="correctText">0</strong><span>corecte</span></div>
+      <div class="result-card"><strong id="wrongText">0</strong><span>greșite</span></div>
+      <div class="result-card"><strong id="unansweredText">0</strong><span>fără răspuns</span></div>
+      <div class="result-card"><strong id="totalText">0</strong><span>total</span></div>
+    </div>
+    <p id="messageText"></p>
+    <div class="skipped" id="skippedInfo"></div>
+    <div class="review-list" id="reviewList"></div>
+    <div class="actions">
+      <button class="secondary" onclick="backToMenu()">Înapoi la lista de teste</button>
+      <button class="main" onclick="restartCurrentTest()">Reia acest test</button>
+    </div>
+  </div>
+</div></div>
+
+<script>
+const tests = {"set1": {"title": "Test 1: Întrebări 1–50", "range": "1–50", "skipped": ["37 — imagine: Wireless Network Properties", "39 — diagramă: security zones", "48 — diagramă: conexiune T3"], "questions": [{"nr": 2, "q": "Connecting to a private network address from a public network requires:", "a": ["Network address translation (NAT)", "Dynamic Host Configuration Protocol (DHCP)", "Network Access Protection (NAP)", "Dynamic domain name system (DDNS)"], "c": [0]}, {"nr": 3, "q": "A Media Access Control (MAC) address identifies a/an:", "a": ["UPnP device", "Local broadcast domain", "Network interface card (NIC)", "Local area network (LAN)"], "c": [2]}, {"nr": 4, "q": "Two companies want to share data by using the Internet. Which type of network provides the solution?", "a": ["Ethernet", "Intranet", "Extranet", "Perimeter"], "c": [2]}, {"nr": 5, "q": "Which technology can you use to extend an internal network across shared or public networks?", "a": ["VLAN", "Microsoft ASP.NET", "Microsoft .NET Framework", "VPN"], "c": [3]}, {"nr": 6, "q": "One purpose of a perimeter network is to:", "a": ["Make resources available to the intranet", "Link campus area networks (CANs)", "Link local area networks (LANs)", "Make resources available to the Internet"], "c": [3]}, {"nr": 7, "q": "A private network that allows members of an organization to exchange data is an:", "a": ["Extranet", "Ethernet", "Intranet", "Internet"], "c": [2]}, {"nr": 8, "q": "Match each network type to its corresponding definition. Which variant is correct?", "a": ["Extranet – only users within an organization; Intranet – system of interconnected networks; Internet – controlled access", "Extranet – controlled access for business/educational purposes; Intranet – access only within an organization; Internet – system of interconnected networks", "Extranet – local network only; Intranet – public network; Internet – private tunnel", "Extranet – wireless network; Intranet – cable network; Internet – firewall zone"], "c": [1]}, {"nr": 9, "q": "What technology takes data, breaks it into packets, and sends it over a network, sometimes using different routes for each packet?", "a": ["Circuit switching", "Connection switching", "Packet switching", "Network switching"], "c": [2]}, {"nr": 10, "q": "What name does Windows Server 2008 R2 use for terminal service?", "a": ["MS telnet server", "MS primary services", "MS thin server", "Remote Desktop Service"], "c": [3]}, {"nr": 11, "q": "What would you use to create VPN tunnels so users can connect to your internal network while at home using Windows Server 2008 R2?", "a": ["Microsoft RAS", "Microsoft RRAS", "Microsoft RDC", "Microsoft VPN Server"], "c": [1]}, {"nr": 12, "q": "VPNs are implemented to provide:", "a": ["A secure connection within a private network", "A secure connection through public networks", "Additional encryption by using IPSec", "Additional security for selected computers"], "c": [1]}, {"nr": 13, "q": "A VPN is a/an:", "a": ["Encrypted connection across the Internet", "Virtual network within your LAN", "Communication tunnel between VLANs", "Personal network for your use only"], "c": [0]}, {"nr": 14, "q": "“A/an virtual private network (VPN)” protects a network's perimeter by monitoring traffic as it enters and leaves. What is correct instead?", "a": ["Extranet", "Firewall", "Intranet", "No change is needed"], "c": [1]}, {"nr": 15, "q": "Match the VPN connection type to the corresponding definition. Which variant is correct?", "a": ["SSL VPN – remote user from Internet; Site-to-Site VPN – connects two private networks; L2TP – creates an unencrypted connection", "SSL VPN – connects only switches; Site-to-Site VPN – only one computer; L2TP – email protocol", "SSL VPN – wireless standard; Site-to-Site VPN – printer protocol; L2TP – firewall", "SSL VPN – local cable; Site-to-Site VPN – DNS service; L2TP – router table"], "c": [0]}, {"nr": 16, "q": "What port does Remote Desktop Services use?", "a": ["443", "501", "389", "3389"], "c": [3]}, {"nr": 17, "q": "You use the ____________ to connect to a terminal server.", "a": ["Remote Desktop Connection (RDC)", "Remote Desktop Protocol (RDP)", "Remote Session Call (RSC)", "Remote NetBIOS Connection (RNC)"], "c": [1]}, {"nr": 18, "q": "What allows a user to connect to a corporate network using the Internet?", "a": ["VPN", "VPC", "PPTN", "IPSec"], "c": [0]}, {"nr": 19, "q": "What command do you use to connect to a remote computer so that you can execute commands?", "a": ["ftp", "nslookup", "telnet", "nbstatat"], "c": [2]}, {"nr": 20, "q": "A network that separates an organization's private network from a public network is a/an:", "a": ["Firewall", "Extranet", "Perimeter", "Internet"], "c": [2]}, {"nr": 21, "q": "In local area network (LAN) topologies, the primary media access methods are: Choose two.", "a": ["Contention", "Negotiation", "Kerberos", "Token passing"], "c": [0, 3]}, {"nr": 22, "q": "In a physical star topology, the central device is referred to as a:", "a": ["Bridge", "Server", "Segmenter", "Hub"], "c": [3]}, {"nr": 23, "q": "The topology of a local area network (LAN) is defined by the:", "a": ["Number of devices to connect", "Physical and logical characteristics", "Distance between workstations", "Type of cable being used"], "c": [1]}, {"nr": 24, "q": "A node within a local area network (LAN) must have a network interface device and a:", "a": ["Network account", "Table of all network nodes", "Host address", "Resource to share"], "c": [2]}, {"nr": 25, "q": "Which type of port is used to support VLAN traffic between two switches?", "a": ["Virtual port", "WAN port", "Trunk port", "LAN port"], "c": [2]}, {"nr": 26, "q": "One reason to incorporate VLANs in a network is to:", "a": ["Increase the number of available IP addresses", "Increase the number of available MAC addresses", "Reduce the number of broadcast domains", "Reduce the number of nodes in a broadcast domain"], "c": [3]}, {"nr": 27, "q": "Match the networking topologies to their characteristics. Which variant is correct?", "a": ["Star – central device; Ring – each node connects to two nodes; Mesh – each computer connects to every other computer", "Star – every computer to every computer; Ring – central hub; Mesh – one cable only", "Star – no central device; Ring – no repeaters; Mesh – no redundancy", "Star – wireless only; Ring – Internet only; Mesh – VPN only"], "c": [0]}, {"nr": 28, "q": "What are three advantages of VLANs? Choose three.", "a": ["They can logically address packets by using IP", "They require a router to connect to VLANs on another switch", "They compartmentalize a network and isolate traffic", "A single switch can implement only a single VLAN", "They act as though they are on the same LAN regardless of physical location"], "c": [0, 2, 4]}, {"nr": 29, "q": "To set lower security settings in Internet Explorer for an extranet site, add the site's URL to the “Local Intranet” zone. What is correct instead?", "a": ["Internet", "Trusted Sites", "Extranet Sites", "No change is needed"], "c": [1]}, {"nr": 30, "q": "IPSec policies for two machines on a LAN can be modified by using the “IPSec policy snap-in” on Windows 7. What is correct instead?", "a": ["Windows Firewall with Advanced Security snap-in", "LAN adapter properties", "Remote Access snap-in", "No change is needed"], "c": [0]}, {"nr": 31, "q": "You need to divide a network into three subnets. Which device should you use?", "a": ["Hub", "Bridge", "Router", "Segmenter"], "c": [2]}, {"nr": 32, "q": "You work at a coffee shop and need to set up a perimeter network. Which two items should you include in the perimeter network? Choose two.", "a": ["Network printer", "Web server", "File server", "Wi‑Fi network", "Point of sale terminals"], "c": [1, 3]}, {"nr": 33, "q": "A node within a local area network (LAN) must have which two of the following? Choose two.", "a": ["Username and password", "Share name", "NIC", "IP address", "Table of all network nodes"], "c": [2, 3]}, {"nr": 34, "q": "What are two advantages of using star topology rather than ring topology in a computer lab workgroup? Choose two.", "a": ["Failure of a central device does not bring down the entire network", "A central connection point allows flexibility and scalability", "Data travels on redundant paths", "A cable problem within the group affects two nodes, at most"], "c": [1, 3]}, {"nr": 35, "q": "What are three characteristics of Ethernet network topology? Choose three.", "a": ["It uses tokens to avoid collisions", "It can use coaxial, twisted pair, and fiber optic media", "It comprises the largest share of networks in place today", "It is a non-switching protocol", "It can negotiate different transmission speeds"], "c": [1, 2, 4]}, {"nr": 36, "q": "What are two characteristics of the CSMA/CD access method? Choose two.", "a": ["It checks to see if a collision has been detected", "It does a round robin search for requests", "It signals its intent to transmit", "It waits until the transmission medium is idle"], "c": [0, 3]}, {"nr": 38, "q": "Perimeter network statements. Which variant is correct?", "a": ["Internal clients access external resources – True; LAN has no access to perimeter – True; Perimeter has Internet servers – False", "Internal clients access external resources – False; LAN has no access to perimeter – False; Perimeter has Internet servers – True", "All three statements are True", "All three statements are False"], "c": [1]}, {"nr": 40, "q": "What device acts as a high-speed modem for LAN?", "a": ["Analog modem", "Telco incoming router", "Packet switcher", "CSU/DSU"], "c": [3]}, {"nr": 41, "q": "Which type of network is most vulnerable to intrusion?", "a": ["Dial-up", "Wireless", "Broadband", "Leased line"], "c": [1]}, {"nr": 42, "q": "Which type of network covers the broadest area?", "a": ["WAN", "CAN", "LAN", "PAN"], "c": [0]}, {"nr": 43, "q": "Which of the following is a Layer 2 WAN protocol?", "a": ["Point-to-Point Protocol (PPP)", "Simple Network Management Protocol (SNMP)", "Transmission Control Protocol (TCP)", "Internet Protocol (IP)"], "c": [0]}, {"nr": 44, "q": "Which two of the following are connectivity options for wide area networks (WANs)? Choose two.", "a": ["Token ring", "Ethernet", "Dial-up", "Leased line"], "c": [2, 3]}, {"nr": 45, "q": "What is the bit rate for a North American T3 circuit?", "a": ["6.312 Mbit/s", "44.736 Mbit/s", "274.176 Mbit/s", "400.352 Mbit/s"], "c": [1]}, {"nr": 46, "q": "A university has network links between various locations. Where would a T3 connection be appropriate?", "a": ["Server to network in the main campus server room", "Main campus to a large satellite campus", "Computer lab PC to lab printer", "Library laptop PC to Internet"], "c": [1]}, {"nr": 47, "q": "Which two features of a Windows Server 2008 R2 server should you install to use that server as a software router? Choose two.", "a": ["Network Policy and Access Services", "Routing and Remote Access Services", "Remote Administration", "DirectAccess"], "c": [0, 1]}, {"nr": 49, "q": "What is the primary disadvantage of X.25?", "a": ["Digital circuit", "Small data payloads", "Circuit switching", "Slow speeds"], "c": [3]}, {"nr": 50, "q": "The _____________ is the largest WAN in the world.", "a": ["Internet", "Intranet", "WWW", "MSDN"], "c": [0]}, {"nr": 51, "q": "What stage is the World Wide Web in?", "a": ["1.0", "1.1", "2.0", "3.0"], "c": [2]}, {"nr": 52, "q": "When you have multiple circuits connected to a site, the entire circuit is known as a:", "a": ["Virtual circuit", "Emulated circuit", "Joined circuit", "Multitasked circuit"], "c": [0]}, {"nr": 53, "q": "What replaced X.25?", "a": ["Frame relay", "ATM", "ISDN BRI", "DSL"], "c": [0]}, {"nr": 54, "q": "At what speed does a T3 line run?", "a": ["1.5 Mbps", "4.5 Mbps", "44.7 Mbps", "128 Mbps"], "c": [2]}]}, "set2": {"title": "Test 2: Întrebări 51–100", "range": "51–100", "skipped": [], "questions": [{"nr": 55, "q": "In Europe, what circuit would be similar to the T1 found in the United States?", "a": ["E1", "J1", "T2", "F1"], "c": [0]}, {"nr": 56, "q": "How many B channels does an ISDN PRI support?", "a": ["2", "8", "23", "48"], "c": [2]}, {"nr": 57, "q": "What technology uses wires from the telephone company to provide broadband Internet connection?", "a": ["Cable", "DSL", "FDDI", "Frame relay"], "c": [1]}, {"nr": 58, "q": "A __________ is the guaranteed certain amount of information provided by a circuit or line.", "a": ["Committed information route", "Pivotal information route", "Next hop policy route", "Frame x frame route"], "c": [0]}, {"nr": 59, "q": "What speed does a T1 run at?", "a": ["1.544 Mbps", "2.889 Mbps", "3.101 Gbps", "2.54 Mbps"], "c": [0]}, {"nr": 60, "q": "How fast is a DS0 circuit?", "a": ["32 Kbps", "64 Kbps", "128 Kbps", "1024 Kbps"], "c": [1]}, {"nr": 61, "q": "X.25 and frame relay are examples of what type of WAN technology?", "a": ["Circuit switching", "Connection switching", "Packet switching", "Network switching"], "c": [2]}, {"nr": 62, "q": "What part of the network is the point where the administrator's responsibility ends and the telecommunications provider's responsibility begins?", "a": ["Last mile", "Demarc", "Router array", "PAD interface"], "c": [1]}, {"nr": 63, "q": "What is the primary disadvantage of X.25?", "a": ["Digital circuit", "Small data payloads", "Circuit switching", "Slow speed"], "c": [3]}, {"nr": 64, "q": "If an 802.11g Internet connection has connectivity problems, what may be the cause?", "a": ["A cordless phone", "A cellular phone", "Incandescent lights", "Electromagnetic interference (EMI)"], "c": [3]}, {"nr": 65, "q": "Which factor has the biggest impact on data transmission speed in a wireless network?", "a": ["The access method used for the network", "The transmission standard of the equipment used", "The use of strong encryption", "The transmission wattage rating used on the NIC"], "c": [1]}, {"nr": 66, "q": "Which of the following uses a tunneling protocol?", "a": ["Internet", "VPN", "Extranet", "VLAN"], "c": [1]}, {"nr": 67, "q": "Which two are published IEEE 802.11 wireless transmission standards? Choose two.", "a": ["802.11f", "802.11g", "802.11k", "802.11m", "802.11n"], "c": [1, 4]}, {"nr": 68, "q": "What happens when an 802.11b node starts broadcasting within the range of an 802.11g access point?", "a": ["The access point will transmit, but the node will be unable to receive", "A connection will be established", "Both will be unable to transmit", "The node will transmit, but the access point will be unable to receive"], "c": [1]}, {"nr": 69, "q": "Which technology provides the highest bit rate?", "a": ["T1", "E1", "DS3", "ISDN"], "c": [2]}, {"nr": 70, "q": "Which wireless authentication method provides the highest level of security?", "a": ["Wired Equivalency Privacy (WEP)", "IEEE 802.11n", "Wi‑Fi Protected Access (WPA)", "IEEE 802.11a"], "c": [2]}, {"nr": 71, "q": "The maximum throughput of an 802.11g network is:", "a": ["2.4 GHz", "54 GHz", "2.4 Mbps", "54 Mbps"], "c": [3]}, {"nr": 72, "q": "Match each 802.11 standard to its characteristics. Which variant is correct?", "a": ["802.11a: 5 GHz / 54 Mbps; 802.11b: 2.4 GHz / 11 Mbps; 802.11g: 2.4 GHz / 54 Mbps; 802.11n: 2.4–5 GHz / 65–600 Mbps", "802.11a: 2.4 GHz / 11 Mbps; 802.11b: 5 GHz / 54 Mbps; 802.11g: 5 GHz / 600 Mbps; 802.11n: 2.4 GHz / 54 Mbps", "All standards use only 2.4 GHz", "All standards have the same speed"], "c": [0]}, {"nr": 73, "q": "Security is a concern on wireless networks due to:", "a": ["The radio broadcast access method", "Spread spectrum issues", "Frequency modulation issues", "The potential for cross-talk"], "c": [0]}, {"nr": 74, "q": "The IEEE standards 802.11a, b, g, and n are collectively known as what?", "a": ["WiMAX", "Bluetooth", "WiFi", "Mobile ad hoc networks"], "c": [2]}, {"nr": 75, "q": "Which IEEE 802.11 Wi‑Fi standard requires dual antennas so it can run in all supported frequencies?", "a": ["802.11a", "802.11b", "802.11g", "802.11n"], "c": [3]}, {"nr": 76, "q": "“WEP” wireless encryption is the most susceptible to interception and decryption. What is the correct answer?", "a": ["WPA-AES", "WPA2", "WPA-PSK", "No change is needed"], "c": [3]}, {"nr": 77, "q": "Which wireless communication problem is caused by electromagnetic waves?", "a": ["Fading", "Attenuation", "Interference", "Diffraction"], "c": [2]}, {"nr": 78, "q": "The four IEEE standards 802.11a, b, g, and n are collectively known as mobile ad hoc networks. What is correct instead?", "a": ["WiMAX", "Bluetooth", "WiFi", "No change is needed"], "c": [2]}, {"nr": 79, "q": "In a wireless network that requires an SSL certificate, WEP handles the SSL certificate. What is correct instead?", "a": ["802.1X", "WPA2-PSK", "WPA-PSK", "No change is needed"], "c": [0]}, {"nr": 80, "q": "Wireless bridge statements. Which variant is correct?", "a": ["Connects Ethernet devices – True; increases AP signal strength – False; always work in pairs – True", "All statements are True", "Connects Ethernet devices – False; increases AP signal – True; always work in pairs – False", "All statements are False"], "c": [0]}, {"nr": 81, "q": "Which of the following is not a characteristic of 802.11n?", "a": ["Frame aggregation", "Channel bonding", "RFI protection", "MIMO"], "c": [2]}, {"nr": 82, "q": "Which of the following determines the media access method used in a network?", "a": ["Number of hosts connected", "Number of domain servers", "Maximum speed of the media", "Topology and protocols"], "c": [3]}, {"nr": 83, "q": "In which physical network topology is each computer connected to a central point?", "a": ["Star", "Mesh", "Ring", "Bus"], "c": [0]}, {"nr": 84, "q": "A characteristic of the mesh topology is that it:", "a": ["Uses a central hub", "Cannot use wired connections", "Uses redundant paths", "Cannot use wireless connections"], "c": [2]}, {"nr": 85, "q": "What are two characteristics of a mesh network topology? Choose two.", "a": ["It is fault tolerant because of redundant connections", "Every node connects to every other node", "It works best for a large number of nodes", "It requires less cabling than star or ring"], "c": [0, 1]}, {"nr": 86, "q": "What speed does FDDI use?", "a": ["10 Mbps", "44 Mbps", "54 Mbps", "100 Mbps"], "c": [3]}, {"nr": 87, "q": "What topology does FDDI use?", "a": ["Bus", "Star", "Ring", "Mesh"], "c": [2]}, {"nr": 88, "q": "A network device that associates a MAC address with a port is a:", "a": ["DSL modem", "Hub", "Router", "Switch"], "c": [3]}, {"nr": 89, "q": "A Layer 2 device that connects multiple computers within a network is a:", "a": ["Repeater", "Switch", "Router", "Packet"], "c": [1]}, {"nr": 90, "q": "In addition to switching, multilayer switches also:", "a": ["Provide Layer 3 routing functions", "Interface only with CAT3", "Support only 10 MB LAN ports", "Operate only by Layer 1 and 2 protocols"], "c": [0]}, {"nr": 91, "q": "One reason to replace an unmanaged switch with a managed switch is to:", "a": ["Manage routing tables", "Support multiple VLANs", "Reduce collision domains", "Route between networks"], "c": [1]}, {"nr": 92, "q": "What is an example of a network device that associates a network address with a port?", "a": ["Switch", "Router", "Hub", "DSL modem"], "c": [1]}, {"nr": 93, "q": "What is a similarity between Layer 2 and Layer 3 switches?", "a": ["Both provide a high level of security", "Both use logical addressing", "Both forward packets onto the network", "Both allow the implementation of VLANs"], "c": [2]}, {"nr": 94, "q": "Which network device interconnects computers in a workgroup, can be remotely configured, and provides the best throughput?", "a": ["Unmanaged switch", "Hub", "Router", "Managed switch"], "c": [3]}, {"nr": 95, "q": "What are two differences between switches and hubs? Choose two.", "a": ["Switches are slower than hubs", "Switches send data to all computers for efficiency", "Switches can send and receive data at the same time", "Switches identify the intended destination of received data"], "c": [2, 3]}, {"nr": 96, "q": "Switch statements. Which variant is correct?", "a": ["Unicast to one destination port – True; floods unknown destination – True; broadcasts only to uplink – False", "All statements are True", "Unicast to all ports – True; floods unknown destination – False; broadcasts only to uplink – True", "All statements are False"], "c": [0]}, {"nr": 97, "q": "One advantage of dynamic routing is that it:", "a": ["Automatically maintains routing tables", "Limits traffic derived from routing protocols", "Reduces broadcast traffic", "Automatically enables DHCP"], "c": [0]}, {"nr": 98, "q": "A router's static route is set by the:", "a": ["Adjacent network", "Next upstream router", "Network administrator", "Routing protocol"], "c": [2]}, {"nr": 99, "q": "The query protocol used to locate resources on a network is:", "a": ["UDP", "LDAP", "Tracert", "Telnet"], "c": [1]}, {"nr": 100, "q": "The function of a router is to:", "a": ["Provide IP subnet masks for hosts", "Forward traffic to other networks", "Broadcast routing tables to clients", "Store tables for name resolution"], "c": [1]}, {"nr": 101, "q": "If a router cannot determine the next hop for a packet, the router will:", "a": ["Forward the packet to the default route", "Send the packet back to the source", "Broadcast the packet", "Store the packet in memory"], "c": [0]}, {"nr": 102, "q": "If a router separates a DHCP server from its clients, the clients will:", "a": ["Immediately lose connectivity to all segments", "Be unable to obtain their leases from the server", "Immediately lose connectivity to the local segment", "Receive an immediate renewal"], "c": [1]}, {"nr": 103, "q": "Every router today is “TCP/IP” enabled, an industry-standard protocol used on the Internet and for local addressing. What is correct?", "a": ["HTTP", "FTP", "SNMP", "No change is needed"], "c": [3]}, {"nr": 104, "q": "“Dynamic routing” is fault tolerant. What is correct?", "a": ["Static routing", "Default route", "Least cost routing", "No change is needed"], "c": [3]}]}, "set3": {"title": "Test 3: Întrebări 101–150", "range": "101–150", "skipped": ["125 — imagine: tip cablu și conector", "150 — imagine: rezultat ping"], "questions": [{"nr": 105, "q": "What is an example of a Layer 3 device that connects multiple computers and networks?", "a": ["Packet", "Repeater", "Switch", "Router"], "c": [3]}, {"nr": 106, "q": "Which metric does Routing Information Protocol (RIP) use to determine the least costly route?", "a": ["Delay", "Host ID", "Hop count", "Interface"], "c": [2]}, {"nr": 107, "q": "Quality of Service (QoS) statements. Which variant is correct?", "a": ["Defines priority traffic – True; controls bandwidth – True; assigns protocols dynamically – False", "All statements are True", "Defines priority – False; controls bandwidth – False; assigns protocols dynamically – True", "All statements are False"], "c": [0]}, {"nr": 108, "q": "________ is a route that must be manually defined on each router.", "a": ["Static", "Dynamic", "Persistent", "Global"], "c": [0]}, {"nr": 109, "q": "What feature within Windows allows the server to act as a router?", "a": ["IPSec", "DHCP", "IP forwarding", "RDC"], "c": [2]}, {"nr": 110, "q": "_______________ uses a clocking circuit to control the timing of communications between two WAN devices such as routers.", "a": ["Static route", "Dynamic route", "PPTP route", "Point to point"], "c": [3]}, {"nr": 111, "q": "What routing protocol is the most popular distance-vector routing algorithm used to determine best routes within a network?", "a": ["RIP", "OSPF", "BGP", "IGMP"], "c": [0]}, {"nr": 112, "q": "What routing protocol is the most popular link-state protocol used within a large organization?", "a": ["RIP", "OSPF", "BGP", "IGMP"], "c": [1]}, {"nr": 113, "q": "When a packet traverses a network, each router is a ____________.", "a": ["Jump point", "CSU/DSU", "Jump switch", "Hop"], "c": [3]}, {"nr": 114, "q": "A cable that meets the 1000BaseT standard has a maximum length of:", "a": ["100 m", "250 m", "500 m", "1,000 m"], "c": [0]}, {"nr": 115, "q": "Attenuation in a wireless network signal is a result of:", "a": ["Number of wireless nodes connected", "Distance from the access point", "Interference from cellular phones", "Encryption of the signal"], "c": [1]}, {"nr": 116, "q": "What is the maximum cable length for a single Cat5 UTP cable run?", "a": ["285 feet / 86.87 meters", "328 feet / 99.97 meters", "432 feet / 131.67 meters", "600 feet / 182.88 meters"], "c": [1]}, {"nr": 117, "q": "Which cable type transmits data the greatest distance?", "a": ["Multi-mode fiber", "Single-mode fiber", "Cat5e", "Cat6"], "c": [1]}, {"nr": 118, "q": "To directly connect the Ethernet NICs of two computers, you should use a:", "a": ["Crossover cable", "Straight cable", "Rollover cable", "Coaxial cable"], "c": [0]}, {"nr": 119, "q": "What is the minimum cabling requirement for a 100BaseTX network?", "a": ["Category 3 UTP cable", "Category 5 UTP cable", "Category 6 UTP cable", "Multimode fiber cable"], "c": [1]}, {"nr": 120, "q": "Which feature of Category 5e STP cable reduces external interference?", "a": ["Crosstalk", "Shielding", "Length", "Twisting"], "c": [1]}, {"nr": 121, "q": "A home office cable needs to support at least 300 Mbps. What is the least expensive option that meets this requirement?", "a": ["Cat3", "Cat5", "Cat5e", "Cat6"], "c": [2]}, {"nr": 122, "q": "The type of connector used on a 100BaseT Ethernet cable is:", "a": ["RJ-11", "RJ-45", "TNC", "BNC"], "c": [1]}, {"nr": 123, "q": "What are two characteristics of fiber optic cable? Choose two.", "a": ["Conducts electricity", "Requires metal conduit", "Supports splicing", "Requires a polish for end connectors"], "c": [2, 3]}, {"nr": 124, "q": "You need to run Ethernet drops where interference exists. Which cable type should you use?", "a": ["STP Cat5e", "UTP Cat5e", "Cat3", "UTP Cat6"], "c": [0]}, {"nr": 126, "q": "When a signal degrades as it runs through a wire, you have:", "a": ["Degradation", "Attenuation", "Crossover", "Resistance"], "c": [1]}, {"nr": 127, "q": "What does X.25 use at its DTE device?", "a": ["Telco incoming router", "Packet switcher", "Analog modem", "PAD"], "c": [3]}, {"nr": 128, "q": "Which of the following represents a MAC address?", "a": ["GV:ZC:KK:DK:FZ:CA", "255.255.255.0", "05:35:AB:6E:A1:25", "127.0.0.1"], "c": [2]}, {"nr": 129, "q": "What is the correct order of the OSI model layers?", "a": ["Physical, Data Link, Network, Transport, Session, Presentation, Application", "Application, Presentation, Session, Transport, Network, Data Link, Physical", "Physical, Network, Data Link, Transport, Session, Presentation, Application", "Data Link, Physical, Network, Transport, Application, Session, Presentation"], "c": [0]}, {"nr": 130, "q": "In which OSI layer does routing occur?", "a": ["Transport", "Network", "Data Link", "Physical"], "c": [1]}, {"nr": 131, "q": "Which protocol is a transport layer protocol?", "a": ["FTP", "IP", "UDP", "ASCII"], "c": [2]}, {"nr": 132, "q": "Which protocol is responsible for automatically assigning IP addresses?", "a": ["HTTP", "DHCP", "DNS", "WINS"], "c": [1]}, {"nr": 133, "q": "At what layer in the OSI model are hardware addresses referenced?", "a": ["Network", "Application", "Data Link", "Physical"], "c": [2]}, {"nr": 134, "q": "According to the OSI model, encryption takes place on the transport layer. What is correct instead?", "a": ["Presentation", "Network", "Application", "No change is needed"], "c": [0]}, {"nr": 135, "q": "Match each protocol to its description. Which variant is correct?", "a": ["UDP – connectionless/best-effort; TCP – connection-oriented/guaranteed; ARP – resolves IP to MAC", "UDP – guaranteed; TCP – resolves IP to MAC; ARP – connectionless", "UDP – email; TCP – DNS; ARP – web", "All are application protocols"], "c": [0]}, {"nr": 136, "q": "Match the OSI layer to its description. Which variant is correct?", "a": ["Application provides services to user apps; Session controls dialogue; Network handles path determination; Data Link checks frames/CRC", "Physical provides email; Session routes packets; Network checks CRC; Data Link encrypts text", "Application is cabling; Presentation is routing; Transport is DNS; Network is keyboard input", "All descriptions belong to Physical layer"], "c": [0]}, {"nr": 137, "q": "OSI statements. Which variant is correct?", "a": ["HTTP/TELNET/FTP/SMTP operate on Layer 7 – True; Layer 4 controls dialogue – False; Layer 3 controls routing – True", "All statements are True", "All statements are False", "Layer 4 controls dialogue – True; Layer 3 controls routing – False"], "c": [0]}, {"nr": 138, "q": "Which layer in the OSI model covers routing between networks?", "a": ["Physical", "Data Link", "Network", "Transport"], "c": [2]}, {"nr": 139, "q": "_____________ is used to send packets from one network to another network.", "a": ["Routing", "Transport", "BGP", "Encapsulation"], "c": [0]}, {"nr": 140, "q": "The protocol that maps IP addresses to MAC addresses is:", "a": ["IMAP", "DHCP", "RIP", "UDP", "ARP"], "c": [4]}, {"nr": 141, "q": "Which of these is an application layer protocol?", "a": ["TCP", "FTP", "IP", "UDP"], "c": [1]}, {"nr": 142, "q": "After enabling Windows Firewall, you can no longer access websites. Which two TCP ports should you add exceptions for? Choose two.", "a": ["Port 21", "Port 23", "Port 25", "Port 80", "Port 443"], "c": [3, 4]}, {"nr": 143, "q": "TCP/IP model statements. Which variant is correct?", "a": ["TCP/IP has four layers corresponding with OSI seven layers – False; TCP/IP application layer corresponds with top four OSI layers – False; TCP/IP transport and Internet layers correspond with OSI layers 3 and 4 – True", "All statements are True", "All statements are False", "Only the first statement is True"], "c": [0]}, {"nr": 144, "q": "Match the TCP port to the corresponding service. Which variant is correct?", "a": ["SMTP – 25; FTP – 21; HTTPS – 443", "SMTP – 80; FTP – 443; HTTPS – 21", "SMTP – 23; FTP – 25; HTTPS – 80", "All use port 53"], "c": [0]}, {"nr": 145, "q": "What command do you use to connect to an FTP server to download a file?", "a": ["nslookup", "ssh", "telnet", "ftp"], "c": [3]}, {"nr": 146, "q": "The default subnet mask for a Class B network is:", "a": ["0.0.0.255", "0.0.255.255", "255.0.0.0", "255.255.0.0"], "c": [3]}, {"nr": 147, "q": "Which network does the IP address 220.100.100.100 belong to?", "a": ["220.100.100.0/24", "220.100.100.1/24", "255.255.255.0/24", "255.255.255.1/24"], "c": [0]}, {"nr": 148, "q": "Which subnet mask is valid?", "a": ["255.255.255.240", "255.255.255.228", "255.255.255.164", "255.255.255.245"], "c": [0]}, {"nr": 149, "q": "What is the default subnet mask for a Class C Internet network?", "a": ["255.255.255.252", "255.255.255.240", "255.255.255.192", "255.255.255.0"], "c": [3]}, {"nr": 151, "q": "Which of the following is a public IP address?", "a": ["10.156.89.1", "68.24.78.221", "172.16.152.48", "192.168.25.101"], "c": [1]}, {"nr": 152, "q": "To which IP configuration does the CIDR notation 192.168.1.1/25 refer?", "a": ["192.168.1.1 255.255.255.64", "192.168.1.1 255.255.255.1", "192.168.1.1 255.255.255.32", "192.168.1.1 255.255.255.256", "192.168.1.1 255.255.255.128"], "c": [4]}, {"nr": 153, "q": "The default gateway address identifies the:", "a": ["Device that will connect the computer to the local network", "Device that will connect the computer to a remote network", "Server that will provide name services", "Server that will authenticate the user"], "c": [1]}, {"nr": 154, "q": "IPv4 multicast addresses range from 192.168.0.0 to 192.168.255.255. What is correct instead?", "a": ["127.0.0.0 to 127.255.255.255", "172.16.0.0 to 172.31.255.255", "224.0.0.0 to 239.255.255.255", "No change is needed"], "c": [2]}, {"nr": 155, "q": "The loopback address of your computer is 127.0.0.1. What is correct?", "a": ["10.0.1.1", "169.254.0.5", "192.168.1.1", "No change is needed"], "c": [3]}, {"nr": 156, "q": "Which of these is a public address space?", "a": ["192.168.0.0/16", "197.16.0.0/12", "10.0.0.0/8", "172.16.0.0/12"], "c": [1]}]}};
+let currentTestId=null, questions=[], current=0, score=0, selected=[], checked=false, userAnswers=[];
+
+const menuBox=document.getElementById("menuBox"), quizBox=document.getElementById("quizBox"), resultBox=document.getElementById("resultBox");
+const menuGrid=document.getElementById("menuGrid"), testTitle=document.getElementById("testTitle"), questionEl=document.getElementById("question"), answersEl=document.getElementById("answers");
+const progressText=document.getElementById("progressText"), progressFill=document.getElementById("progressFill"), nextBtn=document.getElementById("nextBtn"), multiNote=document.getElementById("multiNote");
+const percentText=document.getElementById("percentText"), correctText=document.getElementById("correctText"), wrongText=document.getElementById("wrongText"), unansweredText=document.getElementById("unansweredText"), totalText=document.getElementById("totalText");
+const messageText=document.getElementById("messageText"), skippedInfo=document.getElementById("skippedInfo"), reviewList=document.getElementById("reviewList");
+
+function buildMenu(){
+  menuGrid.innerHTML="";
+  Object.keys(tests).forEach(id=>{
+    const t=tests[id];
+    const b=document.createElement("button");
+    b.className="test-link";
+    b.onclick=()=>startTest(id);
+    b.innerHTML="<strong>"+t.title+"</strong><span>"+t.questions.length+" întrebări. Interval original: "+t.range+". "+(t.skipped.length?("Sărite: "+t.skipped.length+"."):"Fără întrebări sărite.")+"</span>";
+    menuGrid.appendChild(b);
+  });
+  const mix=document.createElement("button");
+  mix.className="test-link";
+  mix.onclick=()=>startMixedTest();
+  mix.innerHTML="<strong>Test final: Mixt 50 întrebări</strong><span>Amestecă întrebări din toate secțiunile disponibile.</span>";
+  menuGrid.appendChild(mix);
+}
+
+function startTest(id){
+  currentTestId=id;
+  questions=[...tests[id].questions];
+  testTitle.textContent=tests[id].title;
+  resetState();
+}
+
+function startMixedTest(){
+  currentTestId="mixed";
+  questions=Object.values(tests).flatMap(t=>t.questions).sort(()=>Math.random()-0.5).slice(0,50);
+  testTitle.textContent="Test final: Mixt 50 întrebări";
+  resetState();
+}
+
+function resetState(){
+  current=0; score=0; selected=[]; checked=false; userAnswers=[];
+  menuBox.classList.add("hidden"); resultBox.classList.add("hidden"); quizBox.classList.remove("hidden");
+  loadQuestion();
+}
+
+function loadQuestion(){
+  checked=false; selected=[]; nextBtn.textContent="Verifică";
+  const item=questions[current];
+  questionEl.textContent=(current+1)+". "+item.q+" (nr. original: "+item.nr+")";
+  answersEl.innerHTML="";
+  multiNote.textContent=item.c.length>1 ? "Alege toate răspunsurile corecte. Sunt "+item.c.length+" răspunsuri corecte." : "Alege răspunsul corect.";
+  item.a.forEach((text,index)=>{
+    const btn=document.createElement("button");
+    btn.className="answer";
+    btn.textContent=String.fromCharCode(65+index)+". "+text;
+    btn.onclick=()=>toggleAnswer(index,btn);
+    answersEl.appendChild(btn);
+  });
+  progressText.textContent="Întrebarea "+(current+1)+"/"+questions.length;
+  progressFill.style.width=(current/questions.length*100)+"%";
+}
+
+function toggleAnswer(index,btn){
+  if(checked) return;
+  const item=questions[current];
+  if(item.c.length===1){
+    selected=[index];
+    document.querySelectorAll(".answer").forEach(b=>b.classList.remove("selected"));
+    btn.classList.add("selected");
+  } else {
+    if(selected.includes(index)){ selected=selected.filter(x=>x!==index); btn.classList.remove("selected"); }
+    else { selected.push(index); btn.classList.add("selected"); }
+  }
+}
+
+function sameAnswers(a,b){
+  if(a.length!==b.length) return false;
+  const aa=[...a].sort((x,y)=>x-y), bb=[...b].sort((x,y)=>x-y);
+  return aa.every((v,i)=>v===bb[i]);
+}
+
+function formatLetters(arr){
+  if(!arr || arr.length===0) return "fără răspuns";
+  return [...arr].sort((x,y)=>x-y).map(i=>String.fromCharCode(65+i)).join(", ");
+}
+
+function checkOrNext(){
+  if(!checked){
+    if(selected.length===0){ alert("Alege cel puțin un răspuns."); return; }
+    checked=true;
+    const item=questions[current], buttons=document.querySelectorAll(".answer");
+    buttons.forEach((btn,index)=>{
+      if(item.c.includes(index)) btn.classList.add("correct");
+      if(selected.includes(index) && !item.c.includes(index)) btn.classList.add("wrong");
+    });
+    const isCorrect=sameAnswers(selected,item.c);
+    if(isCorrect) score++;
+    userAnswers[current]={question:item.q, originalNr:item.nr, selected:[...selected], correct:[...item.c], isCorrect:isCorrect, answered:true};
+    nextBtn.textContent=current===questions.length-1 ? "Vezi rezultatul" : "Următoarea";
+  } else {
+    current++;
+    if(current<questions.length) loadQuestion(); else showResult();
+  }
+}
+
+function finishNow(){
+  if(confirm("Sigur vrei să termini testul acum? Întrebările fără răspuns se vor calcula ca greșite.")) showResult();
+}
+
+function showResult(){
+  quizBox.classList.add("hidden"); resultBox.classList.remove("hidden"); progressFill.style.width="100%";
+  let correct=0, unanswered=0;
+  const reviewData=questions.map((q,i)=>{
+    const r=userAnswers[i];
+    if(!r){ unanswered++; return {question:q.q, originalNr:q.nr, selected:[], correct:q.c, isCorrect:false, answered:false}; }
+    if(r.isCorrect) correct++;
+    return r;
+  });
+  const total=questions.length, wrong=total-correct, percent=Math.round(correct/total*100);
+  percentText.textContent=percent+"%"; correctText.textContent=correct; wrongText.textContent=wrong; unansweredText.textContent=unanswered; totalText.textContent=total;
+  messageText.textContent = percent>=80 ? "Foarte bine! Rezultatul este aproape de nivelul dorit pentru examen." : (percent>=60 ? "Bine, dar mai trebuie repetate întrebările greșite." : "Mai ai de exersat. Repetă întrebările greșite și încearcă din nou.");
+  const skipped = currentTestId==="mixed" ? Object.values(tests).flatMap(t=>t.skipped) : (tests[currentTestId]?.skipped || []);
+  skippedInfo.innerHTML="<strong>Întrebări sărite deoarece necesitau imagine/diagramă:</strong><br>"+(skipped.length?skipped.join("<br>"):"Nu sunt întrebări sărite în acest set.");
+  reviewList.innerHTML="<h3>Rezumat răspunsuri</h3>";
+  reviewData.forEach((r,index)=>{
+    const div=document.createElement("div");
+    div.className="review-item";
+    const cls = !r.answered ? "miss" : (r.isCorrect ? "ok" : "bad");
+    const label = !r.answered ? "Fără răspuns" : (r.isCorrect ? "Corect" : "Greșit");
+    div.innerHTML="<span class='"+cls+"'>"+label+"</span><br><strong>"+(index+1)+". "+r.question+" (nr. original: "+r.originalNr+")</strong><br>Răspunsul tău: "+formatLetters(r.selected)+"<br>Răspuns corect: "+formatLetters(r.correct);
+    reviewList.appendChild(div);
+  });
+}
+
+function restartCurrentTest(){
+  if(currentTestId==="mixed") startMixedTest(); else startTest(currentTestId);
+}
+
+function backToMenu(){
+  quizBox.classList.add("hidden"); resultBox.classList.add("hidden"); menuBox.classList.remove("hidden");
+}
+
+buildMenu();
+</script>
+</body>
+</html>
